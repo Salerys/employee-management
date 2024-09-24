@@ -1,7 +1,13 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from .models import JobDetails, Performance, PersonalDetails
 from .forms import RegisterForm
+from .utils import (
+    get_job_details_by_username,
+    get_performance_by_username,
+    get_personal_details_by_username,
+)
 
 
 def index(request):
@@ -46,4 +52,37 @@ def user_register(request):
         request,
         'register/register.html',
         {'form': form},
+    )
+
+
+@login_required
+def home(request):
+    current_user = request.user
+    username = current_user.username
+    job_details = get_job_details_by_username(username)
+    personal_details = get_personal_details_by_username(username)
+    first_name = personal_details.first_name
+
+    return render(
+        request, 'main/home.html', {'job': job_details, 'first_name': first_name}
+    )
+
+
+@login_required
+def get_profile_data(request, id):
+    current_user = request.user
+    username = current_user.username
+
+    personal_details = get_personal_details_by_username(username)
+    job_details = get_job_details_by_username(username)
+    performance = get_performance_by_username(username)
+
+    return render(
+        request,
+        'main/profile.html',
+        {
+            'personal_details': personal_details,
+            'job_details': job_details,
+            'performance': performance,
+        },
     )

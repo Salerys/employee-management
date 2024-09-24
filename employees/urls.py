@@ -12,4 +12,6 @@ urlpatterns = [
         LogoutView.as_view(next_page='/login'),
         name='logout',
     ),
+    path('home/', views.home, name='home'),
+    path('profile/<int:id>', views.get_profile_data, name='profile'),
 ]
