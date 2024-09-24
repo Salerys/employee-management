@@ -18,10 +18,17 @@
     <h1 class="text-center mb-3">Employee Management System</h1>
     <main class="container-sm" style="min-height: 100vh">
       {% block content %}
-    <div class="container-sm mt-3 mb-3 w-75 d-flex justify-content-center">    
-      <a class="btn btn-primary w-100-px ms-1 me-1" href="{% url 'login' %}">Login</a>
-      <a class="btn btn-primary w-100-px ms-1 me-1" href="{% url 'register' %}">Register</a>
-    </div>
+      <div class="container-sm mt-3 mb-3 w-75 d-flex justify-content-center">
+        {% if user.is_authenticated %}
+        <form method="post" action="{% url 'logout' %}"> 
+          {% csrf_token %}       
+          <button type="submit" class="btn btn-danger w-80-px ms-1 me-1">Logout</button>
+        </form>
+        {% else %}      
+        <a class="btn btn-primary w-100-px ms-1 me-1" href="{% url 'login' %}">Login</a>
+        <a class="btn btn-primary w-100-px ms-1 me-1" href="{% url 'register' %}">Register</a>
+        {% endif %}
+      </div>
     {% endblock content %}
   </main>
     <footer class="footer mt-auto py-3 bg-light">
