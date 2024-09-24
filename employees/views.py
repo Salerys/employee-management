@@ -1,9 +1,12 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.hashers import make_password
 from .models import JobDetails, Performance, PersonalDetails
-from .forms import RegisterForm
+from .forms import EditProfileForm, RegisterForm
 from .utils import (
+    clear_messages,
     get_job_details_by_username,
     get_performance_by_username,
     get_personal_details_by_username,
@@ -22,28 +25,27 @@ def user_register(request):
             user = form.save(commit=False)
             user.save()
 
-            # Step 1: Create an empty Performance instance
+            # Create an empty Performance model
             performance_model = Performance.objects.create()
 
-            # Step 2: Create a JobDetails instance and assign the performance
+            # Create a JobDetails model and assign the Performance model
             job_details_model = JobDetails.objects.create(performance=performance_model)
 
-            # Step 3: Create the PersonalDetails and associate with the user and job_details
+            # Create the PersonalDetails and associate with the user and job_details
             PersonalDetails.objects.create(
                 first_name=user.first_name,
                 last_name=user.last_name,
                 username=user.username,
                 email=user.email,
-                password=user.password,  # Assuming password is already hashed by the form
+                password=user.password,
                 job_details=job_details_model,
             )
 
-            messages.success(request, "Registration successful!")  # Success message
-            return redirect('/')  # Redirect to a success page after registration
+            # Redirect if success
+            messages.success(request, "Registration successful!")
+            return redirect('/')
         else:
-            messages.error(
-                request, "There was an error with your submission."
-            )  # Error message
+            messages.error(request, "There was an error with your submission.")
 
     else:
         form = RegisterForm()
@@ -72,7 +74,6 @@ def home(request):
 def get_profile_data(request, id):
     current_user = request.user
     username = current_user.username
-
     personal_details = get_personal_details_by_username(username)
     job_details = get_job_details_by_username(username)
     performance = get_performance_by_username(username)
@@ -86,3 +87,52 @@ def get_profile_data(request, id):
             'performance': performance,
         },
     )
+
+
+@login_required
+def update_profile(request, id):
+    clear_messages(request)
+    user = request.user
+    personal_details = get_object_or_404(PersonalDetails, username=user.username)
+
+    if request.method == 'POST':
+
+        form = EditProfileForm(request.POST, instance=personal_details)
+
+        if form.is_valid():
+
+            form.save()
+
+            # Update the User model data (username, email, and password)
+            new_username = form.cleaned_data.get('username')
+            new_email = form.cleaned_data.get('email')
+            new_password = form.cleaned_data.get('new_password')
+
+            # Update username and email if changed
+            user.username = new_username
+            user.email = new_email
+
+            # If a new password is provided, hash it and update the User's password
+            if new_password:
+                user.password = make_password(new_password)
+                user.save()
+
+                # Reauthenticate the user with the new credentials
+                updated_user = authenticate(
+                    username=new_username, password=new_password
+                )
+                if updated_user is not None:
+                    login(request, updated_user)  # Re-log the user in
+
+            else:
+                user.save()  # Save changes if no password is updated
+
+            messages.success(request, 'Update was successful.')
+            return render(request, 'main/edit-profile.html', {'form': form, 'id': id})
+
+        else:
+            messages.error(request, 'There was an error with your submission.')
+
+    else:
+        form = EditProfileForm(instance=personal_details)
+    return render(request, 'main/edit-profile.html', {'form': form, 'id': id})
