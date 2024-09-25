@@ -5,3 +5,45 @@
 .h-75-px {
   height: 38px;
 }
+
+.custom-container {
+  max-width: 400px;
+}
+
+.bottom-line {
+  border-bottom: 1px solid #d3d3d3;
+}
+
+.min-height {
+  min-height: 80px;
+}
+
+#message-container {
+  transition: opacity 1s ease-in-out;
+}
+
+/* Custom styles for error messages */
+.alert-error {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+}
+
+/* Custom styles for success messages */
+.alert-success {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
+}
+
+@media (max-width: 520px) {
+  .flex-align {
+    flex-direction: column !important;
+  }
+}
+
+@media (max-width: 340px) {
+  .flex-align-340 {
+    flex-direction: column !important;
+  }
+}
