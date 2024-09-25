@@ -126,9 +126,12 @@
         <td>{{ short_name }}</td>
         <td>{{ full_name }}</td>
         <td>
-          <!-- Edit and Delete buttons -->
           <div class="text-end">
-            <a href="#" class="btn btn-sm btn-warning mb-2">Edit</a>
+            <a
+              href="{% url 'edit-role' short_name=short_name %}"
+              class="btn btn-sm btn-warning mb-2"
+              >Edit</a
+            >
             <a href="#" class="btn btn-sm btn-danger mb-2">Delete</a>
           </div>
         </td>

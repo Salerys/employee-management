@@ -380,3 +380,47 @@ def delete_department(request, short_name):
         'main/delete-department.html',
         {'item': department[1], 'type': 'department'},
     )
+
+
+@login_required
+@admin_required
+def edit_role(request, short_name):
+    clear_messages(request)
+    if short_name == 'ADM':
+        messages.error(request, "The Admin role cannot be edited.")
+        return redirect('job-settings')
+
+    # Find the role in ROLE_CHOICES
+    role = next(
+        (short, full) for short, full in JobDetails.ROLE_CHOICES if short == short_name
+    )
+
+    if request.method == 'POST':
+        new_full_name = request.POST.get('new_full_name')
+        new_short_name = request.POST.get('new_short_name')
+
+        if new_short_name and new_full_name:
+            # Check if the new short name already exists
+            if any(
+                short == new_short_name.upper() for short, _ in JobDetails.ROLE_CHOICES
+            ):
+                messages.error(request, "This short name already exists.")
+            else:
+                # Update the role in the database
+                role_instance = JobDetails.objects.get(role=short_name)
+                role_instance.role = new_short_name.upper()  # Update the short name
+                role_instance.save()  # Save the changes
+
+                messages.success(request, "Role updated successfully.")
+                return redirect('job-settings')  # Redirect back to the settings page
+        else:
+            messages.error(request, "Both short and full names are required.")
+
+    return render(
+        request,
+        'main/edit-role.html',
+        {
+            'current_full_name': role[1],
+            'current_short_name': role[0],
+        },
+    )

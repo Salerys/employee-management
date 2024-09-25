@@ -29,4 +29,9 @@ urlpatterns = [
         views.delete_department,
         name='delete-department',
     ),
+    path(
+        'edit-role/<str:short_name>/',
+        views.edit_role,
+        name='edit-role',
+    ),
 ]

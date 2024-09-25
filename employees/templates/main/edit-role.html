@@ -1,0 +1,58 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mt-5">
+  <div class="mt-4 d-flex justify-content-between min-height">
+    <h2>Edit Role</h2>
+
+    {% if messages %}
+    <div id="message-container" class="w-50">
+      {% for message in messages %} {% if forloop.last %}
+      <div
+        class="alert alert-{{ message.tags }} alert-dismissible fade show"
+        role="alert"
+      >
+        {{ message }}
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+          aria-label="Close"
+        ></button>
+      </div>
+      {% endif %} {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="new_full_name">Role Full Name</label>
+      <input
+        type="text"
+        id="new_full_name"
+        name="new_full_name"
+        class="form-control"
+        value="{{ current_full_name }}"
+        required
+      />
+    </div>
+    <div class="form-group">
+      <label for="new_short_name">Role Short Name</label>
+      <input
+        type="text"
+        id="new_short_name"
+        name="new_short_name"
+        class="form-control"
+        value="{{ current_short_name }}"
+        required
+      />
+    </div>
+    <div class="text-end mt-3">
+      <button type="submit" class="btn btn-primary mb-2">Save Changes</button>
+      <a href="{% url 'job-settings' %}" class="btn btn-secondary mb-2"
+        >Cancel</a
+      >
+    </div>
+  </form>
+</div>
+{% endblock %}
