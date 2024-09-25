@@ -99,7 +99,11 @@
               class="btn btn-sm btn-warning mb-2"
               >Edit</a
             >
-            <a href="#" class="btn btn-sm btn-danger mb-2">Delete</a>
+            <a
+              href="{% url 'delete-department' short_name=short_name %}"
+              class="btn btn-sm btn-danger mb-2"
+              >Delete</a
+            >
           </div>
         </td>
       </tr>

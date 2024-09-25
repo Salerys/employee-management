@@ -24,4 +24,9 @@ urlpatterns = [
         views.edit_department,
         name='edit-department',
     ),
+    path(
+        'delete-department/<str:short_name>/',
+        views.delete_department,
+        name='delete-department',
+    ),
 ]

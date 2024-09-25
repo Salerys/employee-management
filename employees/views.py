@@ -356,3 +356,27 @@ def edit_department(request, short_name):
             'current_short_name': department[0],
         },
     )
+
+
+@login_required
+@admin_required
+def delete_department(request, short_name):
+    clear_messages(request)
+    # Find the department by its short name
+    department = next(
+        (short, full)
+        for short, full in JobDetails.DEPARTMENT_CHOICES
+        if short == short_name
+    )
+
+    if request.method == 'POST':
+        # Mark the department as inactive
+        department.is_active = False
+        messages.success(request, f"Department '{department[1]}' deleted successfully.")
+        return redirect('job-settings')  # Redirect back to the settings page
+
+    return render(
+        request,
+        'main/delete-department.html',
+        {'item': department[1], 'type': 'department'},
+    )
