@@ -149,8 +149,6 @@ def employees_list(request):
     job_details = get_job_details_by_username(username)
     self_id = job_details.id
     search_query = request.GET.get('search', '')
-
-    # Start with the base queryset
     employees = PersonalDetails.objects.select_related('job_details')
 
     # Check if the current user is an ADM
@@ -178,7 +176,7 @@ def update_employee(request, emp_id):
     username = current_user.username
     self_job_details = get_job_details_by_username(username)
 
-    # Fetch JobDetails first
+    # Fetch JobDetails
     personal_details = get_object_or_404(PersonalDetails, job_details__id=emp_id)
     job_details = get_object_or_404(JobDetails, id=emp_id)
     performance = job_details.performance
@@ -186,25 +184,25 @@ def update_employee(request, emp_id):
     # Check if the employee's role is ADM
     if job_details.role == 'ADM' and self_job_details.role != 'ADM':
         messages.error(request, "You cannot update an Admin employee.")
-        return redirect('list')  # Adjust the redirect as needed
+        return redirect('list')
 
     if request.method == 'POST':
         # Update both JobDetails and Performance data in the form
         form = EditEmployeeForm(request.POST, instance=job_details)
 
         if form.is_valid():
-            # Save the form data
+
             form.save()
 
-            # Update Performance model (manual field update)
-            if performance:  # Ensure performance exists
+            # Update Performance model
+            if performance:
                 performance.review_date = form.cleaned_data.get('review_date')
                 performance.rating = form.cleaned_data.get('rating')
                 performance.comments = form.cleaned_data.get('comments')
                 performance.save()
 
             messages.success(request, 'Profile updated successfully!')
-            return redirect('list')  # Redirect after success
+            return redirect('list')
         else:
             messages.error(request, 'There was an error with your submission.')
 
@@ -238,22 +236,23 @@ def delete_employee(request, emp_id):
     current_user = request.user
     username = current_user.username
     self_job_details = get_job_details_by_username(username)
-    # Get the PersonalDetails object associated with the job_id
+
+    # Get the PersonalDetails object with the job_id
     personal_details = get_object_or_404(PersonalDetails, job_details__id=emp_id)
     job_details = get_object_or_404(JobDetails, id=emp_id)
 
     # Check if the employee's role is ADM
     if job_details.role == 'ADM' and self_job_details.role != 'ADM':
         messages.error(request, "You cannot delete an Admin employee.")
-        return redirect('main:list')  # Adjust the redirect as needed
+        return redirect('main:list')
 
     if request.method == 'POST':
-        # Get the associated User object
+        # Get the User object
         user = get_object_or_404(User, username=personal_details.username)
 
         # Delete the User, PersonalDetails, and related JobDetails & Performance
-        user.delete()  # This will delete the user from the User model
-        personal_details.delete()  # This will delete PersonalDetails, and cascade to JobDetails and Performance
+        user.delete()
+        personal_details.delete()
 
         messages.success(request, 'Employee deleted successfully.')
         return redirect('main:list')  # Redirect to the employee list view
@@ -278,7 +277,7 @@ def job_settings(request):
     role_choices = JobDetails.ROLE_CHOICES
 
     if request.method == 'POST':
-        # Process new department or role addition
+        # New department/role
         new_department_full = request.POST.get('new_department_full')
         new_department_short = request.POST.get('new_department_short')
         new_role_full = request.POST.get('new_role_full')
@@ -321,3 +320,39 @@ def job_settings(request):
     }
 
     return render(request, 'main/job-settings.html', context)
+
+
+@login_required
+@admin_required
+def edit_department(request, short_name):
+    # Find the department by its short name
+    department = next(
+        (short, full)
+        for short, full in JobDetails.DEPARTMENT_CHOICES
+        if short == short_name
+    )
+
+    if request.method == 'POST':
+        new_full_name = request.POST.get('new_full_name')
+        new_short_name = request.POST.get('new_short_name')
+
+        # Update the department name if it doesn't already exist
+        if new_short_name and new_full_name:
+            # Replace old entry with updated one
+            JobDetails.DEPARTMENT_CHOICES.remove(department)
+            JobDetails.DEPARTMENT_CHOICES.append(
+                (new_short_name.upper(), new_full_name)
+            )
+            messages.success(request, "Department updated successfully.")
+            return redirect('job-settings')  # Redirect back to the settings page
+        else:
+            messages.error(request, "Both short and full names are required.")
+
+    return render(
+        request,
+        'main/edit-department.html',
+        {
+            'current_full_name': department[1],
+            'current_short_name': department[0],
+        },
+    )

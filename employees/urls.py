@@ -19,4 +19,9 @@ urlpatterns = [
     path('edit-employee/<int:emp_id>', views.update_employee, name='edit-employee'),
     path('confirm-delete/<int:emp_id>', views.delete_employee, name='confirm-delete'),
     path('job-settings', views.job_settings, name='job-settings'),
+    path(
+        'edit-department/<str:short_name>/',
+        views.edit_department,
+        name='edit-department',
+    ),
 ]
