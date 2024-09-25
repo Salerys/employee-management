@@ -28,9 +28,9 @@ STATICFILES_DIRS = (os.path.join(BASE_DIR, "employees/static"),)
 SECRET_KEY = config('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DJANGO_DEBUG', default=True, cast=bool)
+DEBUG = False
 
-ALLOWED_HOSTS = ['your-heroku-app.herokuapp.com', 'localhost']
+ALLOWED_HOSTS = ['https://employee-management-21ea4b939477.herokuapp.com', 'localhost']
 
 
 # Application definition
