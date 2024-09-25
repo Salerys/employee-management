@@ -424,3 +424,37 @@ def edit_role(request, short_name):
             'current_short_name': role[0],
         },
     )
+
+
+@login_required
+@admin_required
+def delete_role(request, short_name):
+    clear_messages(request)
+    if short_name == 'ADM':
+        messages.error(request, "The Admin role cannot be deleted.")
+        return redirect('job-settings')
+
+    # Find the role in ROLE_CHOICES
+    role = next(
+        (short, full) for short, full in JobDetails.ROLE_CHOICES if short == short_name
+    )
+
+    # Check if any employee currently has this role
+    if JobDetails.objects.filter(role=short_name).exists():
+        messages.error(
+            request,
+            f"The role '{role[1]}' cannot be deleted because it is assigned to existing employees.",
+        )
+        return redirect('job-settings')
+
+    if request.method == 'POST':
+        # Mark the role as inactive
+        role_instance = JobDetails.objects.get(role=short_name)
+        role_instance.is_active = False
+        role_instance.save()
+        messages.success(request, f"Role '{role[1]}' has been deactivated.")
+        return redirect('job-settings')
+
+    return render(
+        request, 'main/confirm-delete.html', {'item': role[1], 'type': 'role'}
+    )
