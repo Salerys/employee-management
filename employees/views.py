@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from .decorators import manager_required
+from .decorators import admin_required, manager_required
 from .models import JobDetails, Performance, PersonalDetails
 from .forms import EditEmployeeForm, EditProfileForm, RegisterForm
 from .utils import (
@@ -268,3 +268,56 @@ def delete_employee(request, emp_id):
         'main/confirm-delete.html',
         {'full_name': full_name, 'department': department},
     )
+
+
+@login_required
+@admin_required
+def job_settings(request):
+    # Extract current department and role choices from JobDetails model
+    department_choices = JobDetails.DEPARTMENT_CHOICES
+    role_choices = JobDetails.ROLE_CHOICES
+
+    if request.method == 'POST':
+        # Process new department or role addition
+        new_department_full = request.POST.get('new_department_full')
+        new_department_short = request.POST.get('new_department_short')
+        new_role_full = request.POST.get('new_role_full')
+        new_role_short = request.POST.get('new_role_short')
+
+        # Add new department
+        if (
+            new_department_full
+            and new_department_short
+            and (new_department_short.upper(), new_department_full)
+            not in department_choices
+        ):
+            JobDetails.DEPARTMENT_CHOICES.append(
+                (new_department_short.upper(), new_department_full)
+            )
+            messages.success(
+                request, f"Department '{new_department_full}' added successfully."
+            )
+        else:
+            messages.warning(
+                request, "Department already exists or fields are incomplete."
+            )
+
+        # Add new role
+        if (
+            new_role_full
+            and new_role_short
+            and (new_role_short.upper(), new_role_full) not in role_choices
+        ):
+            JobDetails.ROLE_CHOICES.append((new_role_short.upper(), new_role_full))
+            messages.success(request, f"Role '{new_role_full}' added successfully.")
+        else:
+            messages.warning(request, "Role already exists or fields are incomplete.")
+
+        return redirect('job-settings')
+
+    context = {
+        'department_choices': JobDetails.get_active_departments(),
+        'role_choices': JobDetails.get_active_roles(),
+    }
+
+    return render(request, 'main/job-settings.html', context)
