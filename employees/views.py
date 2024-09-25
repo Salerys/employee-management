@@ -3,6 +3,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.hashers import make_password
+from django.db.models import Q
+from .decorators import manager_required
 from .models import JobDetails, Performance, PersonalDetails
 from .forms import EditProfileForm, RegisterForm
 from .utils import (
@@ -136,3 +138,32 @@ def update_profile(request, id):
     else:
         form = EditProfileForm(instance=personal_details)
     return render(request, 'main/edit-profile.html', {'form': form, 'id': id})
+
+
+@login_required
+@manager_required
+def employees_list(request):
+    current_user = request.user
+    username = current_user.username
+    job_details = get_job_details_by_username(username)
+    self_id = job_details.id
+    search_query = request.GET.get('search', '')
+
+    # Start with the base queryset
+    employees = PersonalDetails.objects.select_related('job_details')
+
+    # Check if the current user is an ADM
+    if job_details.role != 'ADM':
+        # Exclude employees with the ADM role if the user is not an ADM
+        employees = employees.exclude(job_details__role='ADM')
+
+    if search_query:
+        employees = employees.filter(
+            Q(first_name__icontains=search_query)
+            | Q(last_name__icontains=search_query)
+            | Q(job_details__department__icontains=search_query)
+        )
+
+    return render(
+        request, 'main/list.html', {'employees': employees, 'self_id': self_id}
+    )

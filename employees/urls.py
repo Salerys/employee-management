@@ -15,4 +15,5 @@ urlpatterns = [
     path('home/', views.home, name='home'),
     path('profile/<int:id>', views.get_profile_data, name='profile'),
     path('edit-profile/<int:id>', views.update_profile, name='edit-profile'),
+    path('list/', views.employees_list, name='list'),
 ]

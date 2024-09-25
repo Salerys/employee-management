@@ -13,6 +13,11 @@
         href="{% url 'profile' id=job.id %}"
         >Profile</a
       >
+      {% if job.role == "MNG" or job.role == "ADM" %}
+      <a class="btn btn-secondary w-100-px mb-3" href="{% url 'list' %}"
+        >Employees</a
+      >
+      {% endif %}
       <button type="submit" class="btn btn-danger w-100-px mb-3">Logout</button>
     </div>
   </form>

@@ -1,0 +1,72 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mt-4">
+  <h1 class="mb-4">Employee List</h1>
+
+  <!-- Search Form -->
+  <form method="get" action="{% url 'list' %}" class="mb-4">
+    <div class="input-group">
+      <input
+        type="text"
+        name="search"
+        class="form-control"
+        placeholder="Search by name or department"
+        value="{{ request.GET.search }}"
+      />
+      <div class="input-group-append">
+        <button class="btn btn-primary" type="submit">Search</button>
+        <a href="{% url 'list' %}" class="btn btn-secondary">List All</a>
+      </div>
+    </div>
+  </form>
+
+  <div class="table-responsive" style="max-height: 400px; overflow-y: auto">
+    <div class="table-responsive">
+      <table class="table table-striped table-bordered">
+        <thead class="thead-dark">
+          <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Job ID</th>
+            <th>Department</th>
+            <th>Job Position</th>
+            <th>Hire date</th>
+            <th>Role</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for employee in employees %}
+          <tr>
+            {% if employee.job_details.id == self_id %}
+            <td><strong>{{ employee.first_name }}</strong></td>
+            <td><strong>{{ employee.last_name }}</strong></td>
+            <td><strong>{{ employee.job_details.id }}</strong></td>
+            <td><strong>{{ employee.job_details.department }}</strong></td>
+            <td><strong>{{ employee.job_details.job_position }}</strong></td>
+            <td><strong>{{ employee.job_details.hire_date }}</strong></td>
+            <td><strong>{{ employee.job_details.role }}</strong></td>
+            {% else %}
+            <td>{{ employee.first_name }}</td>
+            <td>{{ employee.last_name }}</td>
+            <td>{{ employee.job_details.id }}</td>
+            <td>{{ employee.job_details.department }}</td>
+            <td>{{ employee.job_details.job_position }}</td>
+            <td>{{ employee.job_details.hire_date }}</td>
+            <td>{{ employee.job_details.role }}</td>
+            {% endif %}
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center">No employees found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="text-end">
+    <a class="btn btn-secondary w-100-px" href="{% url 'home' %}">Back</a>
+  </div>
+</div>
+{% endblock %}
