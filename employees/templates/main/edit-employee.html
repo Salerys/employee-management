@@ -1,0 +1,14 @@
+{% extends 'base.html' %} {% load crispy_forms_tags %} {% block content %}
+<div class="container mt-4">
+  <h2>Edit Profile for {{ first_name }} {{ last_name }}</h2>
+  <form method="post" class="form-group">
+    {% csrf_token %} {{ form | crispy }}
+    <div class="d-flex justify-content-end mt-3 mb-3">
+      <button type="submit" class="btn btn-primary me-2 w-100-px">
+        Update
+      </button>
+      <a class="btn btn-secondary w-100-px" href="{% url 'list' %}">Back</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

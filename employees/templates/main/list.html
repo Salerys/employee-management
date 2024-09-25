@@ -55,6 +55,22 @@
             <td>{{ employee.job_details.hire_date }}</td>
             <td>{{ employee.job_details.role }}</td>
             {% endif %}
+            <td>
+              {% if employee.job_details.id %}
+              <a
+                href="{% url 'edit-employee' emp_id=employee.job_details.id %}"
+                class="btn btn-warning btn-sm"
+                >Edit</a
+              >
+              <a
+                href="{% url 'confirm-delete' emp_id=employee.job_details.id %}"
+                class="btn btn-warning btn-sm"
+                >Delete</a
+              >
+              {% else %}
+              <span class="text-muted">N/A</span>
+              {% endif %}
+            </td>
           </tr>
           {% empty %}
           <tr>

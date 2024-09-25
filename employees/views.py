@@ -1,12 +1,13 @@
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from .decorators import manager_required
 from .models import JobDetails, Performance, PersonalDetails
-from .forms import EditProfileForm, RegisterForm
+from .forms import EditEmployeeForm, EditProfileForm, RegisterForm
 from .utils import (
     clear_messages,
     get_job_details_by_username,
@@ -166,4 +167,104 @@ def employees_list(request):
 
     return render(
         request, 'main/list.html', {'employees': employees, 'self_id': self_id}
+    )
+
+
+@login_required
+@manager_required
+def update_employee(request, emp_id):
+    clear_messages(request)
+    current_user = request.user
+    username = current_user.username
+    self_job_details = get_job_details_by_username(username)
+
+    # Fetch JobDetails first
+    personal_details = get_object_or_404(PersonalDetails, job_details__id=emp_id)
+    job_details = get_object_or_404(JobDetails, id=emp_id)
+    performance = job_details.performance
+
+    # Check if the employee's role is ADM
+    if job_details.role == 'ADM' and self_job_details.role != 'ADM':
+        messages.error(request, "You cannot update an Admin employee.")
+        return redirect('list')  # Adjust the redirect as needed
+
+    if request.method == 'POST':
+        # Update both JobDetails and Performance data in the form
+        form = EditEmployeeForm(request.POST, instance=job_details)
+
+        if form.is_valid():
+            # Save the form data
+            form.save()
+
+            # Update Performance model (manual field update)
+            if performance:  # Ensure performance exists
+                performance.review_date = form.cleaned_data.get('review_date')
+                performance.rating = form.cleaned_data.get('rating')
+                performance.comments = form.cleaned_data.get('comments')
+                performance.save()
+
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('list')  # Redirect after success
+        else:
+            messages.error(request, 'There was an error with your submission.')
+
+    else:
+        # Pre-fill form with JobDetails and Performance data
+        form = EditEmployeeForm(
+            instance=job_details,
+            initial={
+                'review_date': performance.review_date if performance else None,
+                'rating': performance.rating if performance else None,
+                'comments': performance.comments if performance else None,
+            },
+        )
+
+    return render(
+        request,
+        'main/edit-employee.html',
+        {
+            'form': form,
+            'first_name': personal_details.first_name,
+            'last_name': personal_details.last_name,
+            'emp_id': emp_id,
+        },
+    )
+
+
+@login_required
+@manager_required
+def delete_employee(request, emp_id):
+    clear_messages(request)
+    current_user = request.user
+    username = current_user.username
+    self_job_details = get_job_details_by_username(username)
+    # Get the PersonalDetails object associated with the job_id
+    personal_details = get_object_or_404(PersonalDetails, job_details__id=emp_id)
+    job_details = get_object_or_404(JobDetails, id=emp_id)
+
+    # Check if the employee's role is ADM
+    if job_details.role == 'ADM' and self_job_details.role != 'ADM':
+        messages.error(request, "You cannot delete an Admin employee.")
+        return redirect('main:list')  # Adjust the redirect as needed
+
+    if request.method == 'POST':
+        # Get the associated User object
+        user = get_object_or_404(User, username=personal_details.username)
+
+        # Delete the User, PersonalDetails, and related JobDetails & Performance
+        user.delete()  # This will delete the user from the User model
+        personal_details.delete()  # This will delete PersonalDetails, and cascade to JobDetails and Performance
+
+        messages.success(request, 'Employee deleted successfully.')
+        return redirect('main:list')  # Redirect to the employee list view
+
+    full_name = f"{personal_details.first_name} {personal_details.last_name}"
+    department = dict(JobDetails.DEPARTMENT_CHOICES).get(
+        job_details.department, job_details.department
+    )
+
+    return render(
+        request,
+        'main/confirm-delete.html',
+        {'full_name': full_name, 'department': department},
     )

@@ -1,7 +1,7 @@
 from django import forms
+from .models import PersonalDetails, JobDetails
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import PersonalDetails
 
 
 class RegisterForm(UserCreationForm):
@@ -20,6 +20,21 @@ class RegisterForm(UserCreationForm):
             'password1',
             'password2',
         ]
+
+
+class JobDetailsForm(forms.ModelForm):
+    class Meta:
+        model = JobDetails
+        fields = ['department', 'job_position', 'hire_date', 'role']
+
+        widgets = {
+            'department': forms.Select(attrs={'class': 'form-control'}),
+            'job_position': forms.Select(attrs={'class': 'form-control'}),
+            'hire_date': forms.DateInput(
+                attrs={'class': 'form-control', 'type': 'date'}
+            ),
+            'role': forms.Select(attrs={'class': 'form-control'}),
+        }
 
 
 class EditProfileForm(forms.ModelForm):
@@ -41,7 +56,8 @@ class EditProfileForm(forms.ModelForm):
             'phone_number',
         ]
 
-    # Override the form's initialization to set required=False for every field
+        # Override the form to set required=False for every field
+
     def __init__(self, *args, **kwargs):
         super(EditProfileForm, self).__init__(*args, **kwargs)
         for field in self.fields:
@@ -55,3 +71,18 @@ class EditProfileForm(forms.ModelForm):
         # Check if the new passwords match
         if new_password and new_password != confirm_new_password:
             self.add_error('confirm_new_password', 'Passwords do not match.')
+
+
+class EditEmployeeForm(forms.ModelForm):
+    review_date = forms.DateField(
+        required=False, widget=forms.DateInput(attrs={'type': 'date'})
+    )
+    rating = forms.IntegerField(required=False, min_value=1, max_value=5)
+    comments = forms.CharField(widget=forms.Textarea, required=False)
+
+    class Meta:
+        model = JobDetails
+        fields = ['department', 'job_position', 'hire_date', 'role']
+        widgets = {
+            'hire_date': forms.DateInput(attrs={'type': 'date'}),
+        }
