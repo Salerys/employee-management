@@ -73,7 +73,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "employee_management.wsgi.application"
-SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', default=True, cast=bool)
+SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'True') == 'True'
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
